@@ -45,9 +45,11 @@ def get_asin_id_and_domain(text: str) -> bool:
     asin_id = re.findall('/(\w{10})/', url)
     domain = re.findall(".(com|de|uk|jp|fr|ca|cn|it|es|in|com.mx)/", url)
     
-    # return None if 
-    if len(asin_id) == 0 or len(domain) == 0:
+    # return
+    if len(asin_id) == 0:
         return None, None
+    elif len(domain) == 0:
+        return asin_id, None
     else:
         return asin_id[0], domain[0]
    
@@ -66,6 +68,7 @@ def get_price_history(update: Update, context: CallbackContext) -> None:
         update.message.reply_text("Price history not available for your country.")
     # send the graph
     else:
+        update.message.reply_text("Processing...")
         graph_url = f"https://graph.keepa.com/pricehistory.png?asin={asin_id}&domain={domain}&range=90"
         update.message.reply_photo(graph_url)
 
