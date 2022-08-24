@@ -56,7 +56,7 @@ def get_asin_id_and_domain(text: str) -> bool:
         url = site.url
     
     # get the asin_id and domain from the url
-    asin_id = re.findall('/(\w{10})/', url)
+    asin_id = re.findall("/(\w{10})[?/]", url)
     domain = re.findall(".(com|de|uk|jp|fr|ca|cn|it|es|in|com.mx)/", url)
     
     # return
