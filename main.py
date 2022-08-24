@@ -43,10 +43,12 @@ def help_command(update: Update, context: CallbackContext) -> None:
 def get_asin_id_and_domain(text: str) -> bool:
     """Returns the ASIN id and domain of the product if the url is valid else returns None"""
     # get the url from the text
-    url = re.search("(?P<url>https?://[^\s]+)", text).group("url")
+    url = re.search("(?P<url>https?://[^\s]+)", text)
     # return None if url is not found
     if not url:
         return None, None
+    
+    url = url.group("url")
     
     # check if the url is shortened url, expand it if so
     if url.split("//")[1][:4] == "amzn":
