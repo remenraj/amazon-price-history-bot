@@ -1,7 +1,14 @@
-from cmath import asin
 import re, os, logging, requests
 from telegram import Update, ForceReply
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
+# from flask import Flask, jsonify, request
+
+
+# app = Flask(__name__)
+
+# to make requirements.txt: pip freeze > requirements.txt
+# to create procfile: echo web: gunicorn run:app >> Procfile
+                    # echo web: python3 main.py >> Procfile
 
 
 # setting up logging module, so you will know when (and why) things don't work as expected
@@ -10,6 +17,11 @@ logging.basicConfig(
     level=logging.INFO
 )
 logger = logging.getLogger(__name__)
+
+
+def error(update, context):
+    """Log Errors caused by Updates."""
+    logger.warning('Update "%s" caused error "%s"', update, context.error)
 
 
 # Define a few command handlers. These usually take the two arguments update and
@@ -72,9 +84,11 @@ def get_price_history(update: Update, context: CallbackContext) -> None:
         graph_url = f"https://graph.keepa.com/pricehistory.png?asin={asin_id}&domain={domain}&range=90"
         update.message.reply_photo(graph_url)
 
+
 def main() -> None:
     """Start the bot."""
     BOT_TOKEN = os.getenv("BOT_AMAZON_PRICE_HISTORY_TOKEN")
+    PORT = int(os.environ.get('PORT', '8443'))
     
     # Create the Updater and pass it your bot's token.
     updater = Updater(BOT_TOKEN)
@@ -89,8 +103,17 @@ def main() -> None:
     # on non command i.e message - echo the message on Telegram
     dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, get_price_history))
 
-    # Start the Bot
-    updater.start_polling()
+    # log all errors
+    dispatcher.add_error_handler(error)
+    
+    # # Start the Bot
+    # updater.start_polling()
+    updater.start_webhook(
+        listen="0.0.0.0",
+        port=int(PORT),
+        url_path=BOT_TOKEN,
+        webhook_url='https://amazon-price-history-bot-tg.herokuapp.com/' + BOT_TOKEN
+    )
 
     # Run the bot until you press Ctrl-C or the process receives SIGINT,
     # SIGTERM or SIGABRT. This should be used most of the time, since
