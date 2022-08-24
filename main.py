@@ -1,4 +1,5 @@
-import re, os, logging
+from cmath import asin
+import re, os, logging, requests
 from telegram import Update, ForceReply
 from telegram.ext import Updater, CommandHandler, MessageHandler, Filters, CallbackContext
 
@@ -17,8 +18,8 @@ def start(update: Update, context: CallbackContext) -> None:
     """Send a message when the command /start is issued."""
     user = update.effective_user
     update.message.reply_markdown_v2(
-        fr'Hi {user.mention_markdown_v2()}\!',
-        reply_markup=ForceReply(selective=True),
+        fr'Hi {user.mention_markdown_v2()}\! Send me an amazon link to see its price history\!',
+        # reply_markup=ForceReply(selective=True),
     )
       
 
@@ -26,13 +27,48 @@ def help_command(update: Update, context: CallbackContext) -> None:
     """Send a message when the command /help is issued."""
     update.message.reply_text('Help!')
     
-def echo(update: Update, context: CallbackContext) -> None:
-    """Echo the user message."""
-    update.message.reply_text(update.message.text)
+ 
+def get_asin_id_and_domain(text: str) -> bool:
+    """Returns the ASIN id and domain of the product if the url is valid else returns None"""
+    # get the url from the text
+    url = re.search("(?P<url>https?://[^\s]+)", text).group("url")
+    # return None if url is not found
+    if not url:
+        return None, None
+    
+    # check if the url is shortened url, expand it if so
+    if url.split("//")[1][:4] == "amzn":
+        site = requests.get(url)
+        url = site.url
+    
+    # get the asin_id and domain from the url
+    asin_id = re.findall('/(\w{10})/', url)
+    domain = re.findall(".(com|de|uk|jp|fr|ca|cn|it|es|in|com.mx)/", url)
+    
+    # return None if 
+    if len(asin_id) == 0 or len(domain) == 0:
+        return None, None
+    else:
+        return asin_id[0], domain[0]
+   
+   
+def get_price_history(update: Update, context: CallbackContext) -> None:
+    """Sends the price history of the product"""
+    
+    # get the asin_id and domain
+    asin_id, domain = get_asin_id_and_domain(text=update.message.text)
+    
+    # check valid link
+    if not asin_id:
+        update.message.reply_text("Enter a valid amazon link.")
+    # check if price history available in domain country
+    elif not domain:
+        update.message.reply_text("Price history not available for your country.")
+    # send the graph
+    else:
+        graph_url = f"https://graph.keepa.com/pricehistory.png?asin={asin_id}&domain={domain}&range=90"
+        update.message.reply_text(graph_url)
 
-        
-url = "https://www.amazon.in/gp/product/B073YSQ927/ref=ewc_pr_img_1?smid=ARENK22K2PQRH&psc=1"
-asin_id = re.findall('/\w{10}/', url)[0].strip("/")    
 
 def main() -> None:
     """Start the bot."""
@@ -49,7 +85,7 @@ def main() -> None:
     dispatcher.add_handler(CommandHandler("help", help_command))
 
     # on non command i.e message - echo the message on Telegram
-    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, echo))
+    dispatcher.add_handler(MessageHandler(Filters.text & ~Filters.command, get_price_history))
 
     # Start the Bot
     updater.start_polling()
