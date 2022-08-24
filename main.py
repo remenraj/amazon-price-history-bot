@@ -67,8 +67,7 @@ def get_price_history(update: Update, context: CallbackContext) -> None:
     # send the graph
     else:
         graph_url = f"https://graph.keepa.com/pricehistory.png?asin={asin_id}&domain={domain}&range=90"
-        update.message.reply_text(graph_url)
-
+        update.message.reply_photo(graph_url)
 
 def main() -> None:
     """Start the bot."""
