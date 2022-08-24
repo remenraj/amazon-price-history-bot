@@ -37,7 +37,7 @@ def start(update: Update, context: CallbackContext) -> None:
 
 def help_command(update: Update, context: CallbackContext) -> None:
     """Send a message when the command /help is issued."""
-    update.message.reply_text('Help!')
+    update.message.reply_text('Help! \n Send me a link of an amazon product to see its price history. Keep in mind that not all products are indexed but has a huge product list in the Keepa database as of now. Price history currently available in these domains: [ com |in | de | uk | jp | fr | ca | cn | it | es | com.mx ].')
     
  
 def get_asin_id_and_domain(text: str) -> bool:
