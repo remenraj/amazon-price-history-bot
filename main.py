@@ -63,7 +63,7 @@ def get_asin_id_and_domain(text: str) -> bool:
     if len(asin_id) == 0:
         return None, None
     elif len(domain) == 0:
-        return asin_id, None
+        return asin_id[0], None
     else:
         return asin_id[0], domain[0]
    
